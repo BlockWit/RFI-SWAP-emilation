@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class TestEngine {
@@ -20,6 +21,7 @@ public class TestEngine {
 
 
         int limit = 10000000;
+        int txCount = 0;
 
         int minIdx = 1;
         int maxIdx = 100;
@@ -27,37 +29,44 @@ public class TestEngine {
         List<TransactionInfo> transactionInfoList = new ArrayList<>();
         List<SwapTransactionInfo> swapTransactionInfoList = new ArrayList<>();
 
-        for (int i = 0; i < limit; i++) {
-            long amount = longRnd(total / 100000000000L, total / 100000000L, rnd);
+        while(txCount < limit) {
+            long amount = longRnd(total / 1000000000000L, total / 1000000000L, rnd);
             int fromIdx = intRnd(minIdx, maxIdx, rnd);
             int toIdx = intRnd(minIdx, maxIdx, rnd);
             boolean isSwap = intRnd(1, 10, rnd) == 1;
             if (isSwap) {
                 //boolean swapDir = rnd.nextBoolean();
-                boolean swapDir = intRnd(1, 100, rnd) != 1;
+                boolean swapDir = intRnd(1, 1000, rnd) != 1;
                 SwapTransactionInfo transactionInfo = trySwap(swapDir ? ethChain : bscChain,
                         swapDir ? bscChain : ethChain,
                         fromIdx,
                         toIdx,
                         amount);
-                if (transactionInfo != null)
+                if (transactionInfo != null) {
+                    txCount++;
                     swapTransactionInfoList.add(transactionInfo);
+                }
             } else {
-                boolean chainFirst = intRnd(1, 1000, rnd) != 1;
+                boolean chainFirst = intRnd(1, 1000, rnd) == 1;
                 TransactionInfo transactionInfo = tryTransfer(chainFirst ? ethChain : bscChain,
                         fromIdx,
                         toIdx,
                         amount);
-                if (transactionInfo != null)
+                if (transactionInfo != null) {
+                    txCount++;
                     transactionInfoList.add(transactionInfo);
-
+                }
             }
         }
 
         String chainStatesAfter = ethChain + "\n" + bscChain;
 
         log.info("Finished: ");
-        log.info("transactions: " + transactionInfoList.size());
+        log.info("transactions summary: " + transactionInfoList.size());
+        log.info("transactions " + ethChain.getName() + " : " + transactionInfoList.stream()
+                .filter(t -> t.chain.getName().equals(ethChain.getName())).collect(Collectors.toList()).size());
+        log.info("transactions " + bscChain.getName() + " : " + transactionInfoList.stream()
+                .filter(t -> t.chain.getName().equals(bscChain.getName())).collect(Collectors.toList()).size());
         log.info("swaps: " + swapTransactionInfoList.size());
 
         int bsc2eth = 0;
@@ -105,3 +114,4 @@ public class TestEngine {
     }
 
 }
+
