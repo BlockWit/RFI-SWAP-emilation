@@ -19,7 +19,7 @@ public class TestEngine {
         String chainStatesBefore = ethChain + "\n" + bscChain;
 
 
-        int limit = 1000000;
+        int limit = 10000000;
 
         int minIdx = 1;
         int maxIdx = 100;
@@ -28,12 +28,13 @@ public class TestEngine {
         List<SwapTransactionInfo> swapTransactionInfoList = new ArrayList<>();
 
         for (int i = 0; i < limit; i++) {
-            long amount = longRnd(total / 1000000000L, total / 1000000L, rnd);
+            long amount = longRnd(total / 100000000000L, total / 100000000L, rnd);
             int fromIdx = intRnd(minIdx, maxIdx, rnd);
             int toIdx = intRnd(minIdx, maxIdx, rnd);
             boolean isSwap = intRnd(1, 10, rnd) == 1;
             if (isSwap) {
-                boolean swapDir = rnd.nextBoolean();
+                //boolean swapDir = rnd.nextBoolean();
+                boolean swapDir = intRnd(1, 100, rnd) != 1;
                 SwapTransactionInfo transactionInfo = trySwap(swapDir ? ethChain : bscChain,
                         swapDir ? bscChain : ethChain,
                         fromIdx,
@@ -42,7 +43,7 @@ public class TestEngine {
                 if (transactionInfo != null)
                     swapTransactionInfoList.add(transactionInfo);
             } else {
-                boolean chainFirst = rnd.nextBoolean();
+                boolean chainFirst = intRnd(1, 1000, rnd) != 1;
                 TransactionInfo transactionInfo = tryTransfer(chainFirst ? ethChain : bscChain,
                         fromIdx,
                         toIdx,
